@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Panel de entradas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --sub:#6e6e73;
+      --green:#34c759;
+      --red:#ff3b30;
+      --border:12px;
+    }
+    *{box-sizing:border-box;font-family:Inter,sans-serif;margin:0}
+    body{background:var(--bg);color:var(--text);padding:2rem}
+    h1{font-size:1.6rem;font-weight:600;margin-bottom:1.5rem}
+
+    /* Tarjetas resumen */
+    .cards{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem}
+    .card{background:var(--card);border-radius:var(--border);padding:1.2rem 1.5rem;flex:1 1 160px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+    .card h2{font-size:1.1rem;font-weight:500;color:var(--sub)}
+    .card p{font-size:2rem;font-weight:600;margin-top:.25rem}
+
+    /* Filtros */
+    form{display:flex;gap:1rem;align-items:center;margin-bottom:1.5rem}
+    input[type=date]{padding:.4rem .6rem;border:1px solid #d1d1d6;border-radius:var(--border);background:#fff}
+    button, a.btn{padding:.45rem 1rem;border:none;border-radius:var(--border);background:#007aff;color:#fff;font-weight:500;cursor:pointer;text-decoration:none;text-align:center}
+    button:hover,a.btn:hover{background:#0065d1}
+
+    /* Tabla */
+    table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--border);overflow:hidden}
+    th,td{padding:.8rem 1rem;text-align:left;font-size:.9rem}
+    th{background:#fafafa;font-weight:600;color:var(--sub)}
+    tr:not(:last-child){border-bottom:1px solid #f0f0f0}
+    .ok{color:var(--green);font-weight:600}
+    .dupe{color:var(--red);font-weight:600}
+
+    /* Footer */
+    footer{margin-top:2rem;font-size:.8rem;color:var(--sub);text-align:center}
+  </style>
+</head>
+<body>
+  <h1>Entradas – Independance Club</h1>
+
+  <!--  Tarjetas resumen-->
+  <div class="cards">
+    <div class="card">
+      <h2>Total emitidas</h2><p><%= totals.emitidas %></p>
+    </div>
+    <div class="card">
+      <h2>Escaneadas</h2><p><%= totals.usadas %></p>
+    </div>
+    <div class="card">
+      <h2>Intentos duplicados</h2><p><%= totals.duplicados %></p>
+    </div>
+  </div>
+
+  <!--  Filtros-->
+  <form>
+    <label>De <input type="date" name="from" value="<%= filters.from %>"></label>
+    <label>a <input type="date" name="to"   value="<%= filters.to %>"></label>
+    <button type="submit">Filtrar</button>
+    <a class="btn" href="/csv?<%= filters.qs %>">Descargar CSV</a>
+  </form>
+
+  <!--  Tabla-->
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th><th>Cliente</th><th>Estado</th><th>Escaneado en</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% data.forEach(o=>{ %>
+        <tr>
+          <td><%= o.id %></td>
+          <td><%= o.customer && o.customer.first_name ? o.customer.first_name : "-" %></td>
+          <td class="<%= o.usada ? 'ok' : (o.intento_dupe ? 'dupe' : '') %>">
+            <%= o.usada ? 'Usada' : (o.intento_dupe ? 'Duplicado' : 'Válida') %>
+          </td>
+          <td><%= o.escaneado_en ? new Date(o.escaneado_en._seconds*1000).toLocaleString() : '–' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <footer>Desarrollado por White Dragon © 2025</footer>
+</body>
+</html>
