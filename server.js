@@ -63,20 +63,20 @@ app.get("/auth/callback", async (req, res) => {
 app.get("/panel", (req, res) => {
   const shop = req.query.shop || "tienda-desconocida";
   res.render("dashboard", {
-    shop,
-    totals: { emitidas: 0, usadas: 0 },
-    filters: { from: "", to: "", qs: "" },
-  });
+  shop,
+  totals: { emitidas: 0, usadas: 0 },
+  filters: { from: "", to: "", qs: "" }
+});
 });
 
 // Página raíz
 app.get("/", (req, res) => {
   const shop = req.query.shop || "desconocido";
   res.render("dashboard", {
-    shop,
-    totals: { emitidas: 0, usadas: 0 },
-    filters: { from: "", to: "", qs: "" },
-  });
+  shop,
+  totals: { emitidas: 0, usadas: 0 },
+  filters: { from: "", to: "", qs: "" }
+});
 });
 
 app.listen(PORT, () => {
