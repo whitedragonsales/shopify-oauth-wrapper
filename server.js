@@ -59,11 +59,24 @@ app.get("/auth/callback", async (req, res) => {
 // 3. Mostrar el panel embebido
 app.get("/panel", (req, res) => {
   const shop = req.query.shop || "tienda-desconocida";
-  res.render("dashboard", { shop });
+
+  // 🔧 Datos simulados para evitar errores de render
+  const totals = {
+    emitidas: 0,
+    usadas: 0
+  };
+
+  res.render("dashboard", { shop, totals });
 });
 
 app.get("/", async (req, res) => {
-  res.render("dashboard", { shop: req.query.shop || "desconocido" });
+  // 🔧 Mismo tratamiento para la raíz
+  const totals = {
+    emitidas: 0,
+    usadas: 0
+  };
+
+  res.render("dashboard", { shop: req.query.shop || "desconocido", totals });
 });
 
 app.listen(PORT, () => {
