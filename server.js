@@ -62,8 +62,8 @@ app.get("/panel", (req, res) => {
   res.render("dashboard", { shop });
 });
 
-app.get("/", (req, res) => {
-  res.send("Usa /auth?shop=TU-TIENDA.myshopify.com para empezar.");
+app.get("/", async (req, res) => {
+  res.render("dashboard", { shop: req.query.shop || "desconocido" });
 });
 
 app.listen(PORT, () => {
