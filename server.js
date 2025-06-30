@@ -21,7 +21,10 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy", `frame-ancestors https://${req.query.shop} https://admin.shopify.com`);
+  res.setHeader(
+    "Content-Security-Policy",
+    `frame-ancestors https://${req.query.shop} https://admin.shopify.com`
+  );
   next();
 });
 
@@ -45,7 +48,7 @@ app.get("/auth/callback", async (req, res) => {
     body: JSON.stringify({
       client_id: SHOPIFY_API_KEY,
       client_secret: SHOPIFY_API_SECRET,
-      code
+      code,
     }),
   });
 
@@ -56,25 +59,24 @@ app.get("/auth/callback", async (req, res) => {
   res.redirect(`/panel?shop=${shop}`);
 });
 
-// 3. Mostrar el panel embebido con valores simulados
+// 3. Mostrar el panel embebido
 app.get("/panel", (req, res) => {
   const shop = req.query.shop || "tienda-desconocida";
-  const totals = {
-    emitidas: 120,   // ⚠️ Sustituir por datos reales si procede
-    usadas: 75
-  };
-  res.render("dashboard", { shop, totals });
+  res.render("dashboard", {
+    shop,
+    totals: { emitidas: 0, usadas: 0 },
+    filters: { from: "", to: "", qs: "" },
+  });
 });
 
-app.get("/", async (req, res) => {
+// Página raíz
+app.get("/", (req, res) => {
   const shop = req.query.shop || "desconocido";
-  const totals = { emitidas: 0, usadas: 0 };
-  try {
-    res.render("dashboard", { shop, totals });
-  } catch (error) {
-    console.error("Error en /:", error);
-    res.status(500).send("Error al cargar dashboard");
-  }
+  res.render("dashboard", {
+    shop,
+    totals: { emitidas: 0, usadas: 0 },
+    filters: { from: "", to: "", qs: "" },
+  });
 });
 
 app.listen(PORT, () => {
