@@ -116,7 +116,11 @@ app.get("/panel", (req, res) => {
     data: filteredEntries
   });
 });
-
+app.get("/", (req, res) => {
+  const shop = req.query.shop;
+  if (!shop) return res.status(400).send("Falta el parámetro 'shop'");
+  res.redirect(`/panel?shop=${shop}`);
+});
 app.listen(PORT, () => {
   console.log(`🟢 Servidor en marcha en http://localhost:${PORT}`);
 });
