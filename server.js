@@ -1,52 +1,71 @@
-// shopify-oauth-wrapper/server.js
 import express from "express";
 import fetch from "node-fetch";
 import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import ejs from "ejs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY;
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
+const HOST = process.env.HOST;
 const SCOPES = "read_orders";
-const REDIRECT_URI = "https://shopify-oauth-wrapper.onrender.com/auth/callback";
-const DASHBOARD_URL = "https://validacion-entradas-indep-pub.web.app/panel";
+const REDIRECT_URI = `${HOST}/auth/callback`;
 
-// 1. Redirigir al flujo de instalación de Shopify
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", `frame-ancestors https://${req.query.shop} https://admin.shopify.com`);
+  next();
+});
+
+// 1. Iniciar la instalación
 app.get("/auth", (req, res) => {
   const shop = req.query.shop;
-  if (!shop) return res.status(400).send("Falta el parámetro 'shop'");
+  if (!shop) return res.status(400).send("Falta 'shop'");
 
   const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SCOPES}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
   res.redirect(installUrl);
 });
 
-// 2. Shopify redirige aquí con un código de autorización
+// 2. Shopify redirige aquí
 app.get("/auth/callback", async (req, res) => {
   const { shop, code } = req.query;
-
   if (!shop || !code) return res.status(400).send("Faltan parámetros");
 
-  const tokenUrl = `https://${shop}/admin/oauth/access_token`;
-  const response = await fetch(tokenUrl, {
+  const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       client_id: SHOPIFY_API_KEY,
       client_secret: SHOPIFY_API_SECRET,
       code
-    })
+    }),
   });
 
-  const data = await response.json();
-  if (!data.access_token) return res.status(401).send("Autenticación fallida");
+  const tokenData = await tokenResponse.json();
+  if (!tokenData.access_token) return res.status(401).send("Error al generar token");
 
-  // Redirige al dashboard
-  res.redirect(DASHBOARD_URL);
+  // Mostrar el panel embebido
+  res.redirect(`/panel?shop=${shop}`);
+});
+
+// 3. Mostrar el panel embebido
+app.get("/panel", (req, res) => {
+  const shop = req.query.shop || "tienda-desconocida";
+  res.render("dashboard", { shop });
 });
 
 app.get("/", (req, res) => {
-  res.send("Bienvenido. Usa /auth?shop=TU-TIENDA.myshopify.com para empezar.");
+  res.send("Usa /auth?shop=TU-TIENDA.myshopify.com para empezar.");
 });
 
-app.listen(PORT, () => console.log(`🟢 Wrapper en marcha en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🟢 Servidor en marcha en http://localhost:${PORT}`);
+});
