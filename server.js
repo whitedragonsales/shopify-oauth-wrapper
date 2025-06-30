@@ -1,3 +1,4 @@
+// server.js (actualizado)
 import express from "express";
 import fetch from "node-fetch";
 import "dotenv/config";
@@ -39,44 +40,51 @@ app.get("/auth", (req, res) => {
 
 // 2. Shopify redirige aquí
 app.get("/auth/callback", async (req, res) => {
-  const { shop, code } = req.query;
-  if (!shop || !code) return res.status(400).send("Faltan parámetros");
+  try {
+    const { shop, code } = req.query;
+    if (!shop || !code) return res.status(400).send("Faltan parámetros");
 
-  const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: SHOPIFY_API_KEY,
-      client_secret: SHOPIFY_API_SECRET,
-      code,
-    }),
-  });
+    const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: SHOPIFY_API_KEY,
+        client_secret: SHOPIFY_API_SECRET,
+        code,
+      }),
+    });
 
-  const tokenData = await tokenResponse.json();
-  if (!tokenData.access_token) return res.status(401).send("Error al generar token");
+    const tokenData = await tokenResponse.json();
+    if (!tokenData.access_token) return res.status(401).send("Error al generar token");
 
-  // Mostrar el panel embebido
-  res.redirect(`/panel?shop=${shop}`);
+    // Mostrar el panel embebido
+    res.redirect(`/panel?shop=${shop}`);
+  } catch (error) {
+    console.error("Error en /auth/callback:", error);
+    res.status(500).send("Error del servidor al procesar la autenticación");
+  }
 });
 
 // 3. Mostrar el panel embebido
 app.get("/panel", (req, res) => {
   const shop = req.query.shop || "tienda-desconocida";
   res.render("dashboard", {
-  shop,
-  totals: { emitidas: 0, usadas: 0 },
-  filters: { from: "", to: "", qs: "" }
-});
+    shop,
+    totals: { emitidas: 0, usadas: 0, duplicados: 0 }, // añadimos duplicados
+    filters: { from: "", to: "", qs: "" },
+    data: []  // añadimos data vacío para que la plantilla no falle
+  });
 });
 
 // Página raíz
 app.get("/", (req, res) => {
   const shop = req.query.shop || "desconocido";
   res.render("dashboard", {
-  shop,
-  totals: { emitidas: 0, usadas: 0 },
-  filters: { from: "", to: "", qs: "" }
-});
+    shop,
+    totals: { emitidas: 0, usadas: 0, duplicados: 0 }, // añadimos duplicados
+    filters: { from: "", to: "", qs: "" },
+    data: []  // añadimos data vacío
+  });
 });
 
 app.listen(PORT, () => {
