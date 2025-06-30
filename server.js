@@ -69,7 +69,12 @@ app.get("/panel", (req, res) => {
 app.get("/", async (req, res) => {
   const shop = req.query.shop || "desconocido";
   const totals = { emitidas: 0, usadas: 0 };
-  res.render("dashboard", { shop, totals });
+  try {
+    res.render("dashboard", { shop, totals });
+  } catch (error) {
+    console.error("Error en /:", error);
+    res.status(500).send("Error al cargar dashboard");
+  }
 });
 
 app.listen(PORT, () => {
